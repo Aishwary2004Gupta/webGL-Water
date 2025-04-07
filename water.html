@@ -91,7 +91,7 @@
       padding-left: 20px;
     }
 
-    .dropdown.open + .dropdown-content {
+    .dropdown.open+.dropdown-content {
       display: block;
     }
   </style>
@@ -1971,18 +1971,18 @@
       // Texture parameters can be passed in via the `options` argument.
       // Example usage:
       //
-          // var t = new GL.Texture(256, 256, {
-          //   // Defaults to gl.LINEAR, set both at once with "filter"
-          //   magFilter: gl.NEAREST,
-          //   minFilter: gl.LINEAR,
-      
-          //   // Defaults to gl.CLAMP_TO_EDGE, set both at once with "wrap"
-          //   wrapS: gl.REPEAT,
-          //   wrapT: gl.REPEAT,
-      
-          //   format: gl.RGB, // Defaults to gl.RGBA
-          //   type: gl.FLOAT // Defaults to gl.UNSIGNED_BYTE
-          // });
+      // var t = new GL.Texture(256, 256, {
+      //   // Defaults to gl.LINEAR, set both at once with "filter"
+      //   magFilter: gl.NEAREST,
+      //   minFilter: gl.LINEAR,
+
+      //   // Defaults to gl.CLAMP_TO_EDGE, set both at once with "wrap"
+      //   wrapS: gl.REPEAT,
+      //   wrapT: gl.REPEAT,
+
+      //   format: gl.RGB, // Defaults to gl.RGBA
+      //   type: gl.FLOAT // Defaults to gl.UNSIGNED_BYTE
+      // });
       function Texture(width, height, options) {
         options = options || {};
         this.id = gl.createTexture();
