@@ -2634,23 +2634,6 @@
       gl_FragColor.r *= 1.0 / (1.0 + exp(-200.0 / (1.0 + 10.0 * (t.y - t.x)) * (newPos.y - refractedLight.y * t.y - 2.0 / 12.0)));\
     }\
   ');
-      this.floatyMesh = GL.Mesh.torus({ detailX: 40, detailY: 20, innerRadius: 0.1, outerRadius: 0.25 });
-      this.floatyShader = new GL.Shader(helperFunctions + `
-    varying vec3 position;
-    void main() {
-      position = sphereCenter + gl_Vertex.xyz * sphereRadius;
-      gl_Position = gl_ModelViewProjectionMatrix * vec4(position, 1.0);
-    }
-  `, helperFunctions + `
-    varying vec3 position;
-    void main() {
-      gl_FragColor = vec4(getSphereColor(position), 1.0);
-      vec4 info = texture2D(water, position.xz * 0.5 + 0.5);
-      if (position.y < info.r) {
-        gl_FragColor.rgb *= underwaterColor * 1.2;
-      }
-    }
-  `);
     }
 
     Renderer.prototype.updateCaustics = function (water) {
@@ -2691,16 +2674,16 @@
       gl.disable(gl.CULL_FACE);
     };
 
-    Renderer.prototype.renderFloaty = function () {
+    Renderer.prototype.renderSphere = function () {
       water.textureA.bind(0);
       this.causticTex.bind(1);
-      this.floatyShader.uniforms({
+      this.sphereShader.uniforms({
         light: this.lightDir,
         water: 0,
         causticTex: 1,
         sphereCenter: this.sphereCenter,
         sphereRadius: this.sphereRadius
-      }).draw(this.floatyMesh);
+      }).draw(this.sphereMesh);
     };
 
     Renderer.prototype.renderCube = function () {
@@ -3153,7 +3136,7 @@
         renderer.sphereRadius = radius;
         renderer.renderCube();
         renderer.renderWater(water, cubemap);
-        renderer.renderFloaty();
+        renderer.renderSphere();
         gl.disable(gl.DEPTH_TEST);
       }
     };
