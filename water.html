@@ -99,23 +99,6 @@
         font-size: 16px;
       }
     }
-
-    .dropdown {
-      cursor: pointer;
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: #ffffff;
-    }
-
-    .dropdown-content {
-      display: none;
-      padding-left: 20px;
-      margin-bottom: 10px;
-    }
-
-    .dropdown.open + .dropdown-content {
-      display: block;
-    }
   </style>
 </head>
 
@@ -123,26 +106,21 @@
   <div id="loading">Loading...</div>
   <div id="help">
     <h1>WebGL Water</h1>
-    <div class="dropdown" onclick="toggleDropdown(this)">Interactions:</div>
-    <ul class="dropdown-content">
-      <li>Draw on the water surfacee to make ripples</li>
+    <ul>
+      <li>Draw on the water surface to make ripples</li>
       <li>Drag the background to rotate the camera</li>
       <li>Press SPACEBAR to pause and unpause</li>
       <li>Drag the sphere to move it around</li>
       <li>Press the L key to set the light direction</li>
       <li>Press the G key to toggle gravity</li>
     </ul>
-    <div class="dropdown" onclick="toggleDropdown(this)">Features:</div>
-    <ul class="dropdown-content">
+    <ul>
       <li>Raytraced reflections and refractions</li>
       <li>Analytic ambient occlusion</li>
       <li>Heightfield water simulation *</li>
       <li>Soft shadows</li>
-      <li>Caustics (see <a
-          href="https://medium.com/@evanwallace/rendering-realtime-caustics-in-webgl-2a99a29a0b2c">this</a> for details)
-        **</li>
+      <li>Caustics (see <a href="https://medium.com/@evanwallace/rendering-realtime-caustics-in-webgl-2a99a29a0b2c">this</a> for details) **</li>
     </ul>
-
   </div>
   <img id="tiles" src="tiles.jpg">
   <img id="xneg" src="xneg.jpg">
@@ -3162,10 +3140,6 @@
         gl.disable(gl.DEPTH_TEST);
       }
     };
-
-    function toggleDropdown(element) {
-      element.classList.toggle('open');
-    }
   </script>
 </body>
 
