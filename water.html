@@ -5,17 +5,25 @@
   <title>WebGL Water</title>
   <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
   <style type="text/css">
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
     body {
-      font: 13px/140% Arial, sans-serif;
-      background: black;
-      color: white;
+      font-family: 'Roboto', Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      background: #121212;
+      color: #e0e0e0;
+      margin: 0;
       overflow: hidden;
     }
 
     a {
-      color: inherit;
-      cursor: pointer;
+      color: #64b5f6;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
     }
 
     img {
@@ -24,22 +32,28 @@
 
     ul {
       padding: 0 0 0 20px;
+      margin: 0;
     }
 
     h1 {
-      font: bold italic 30px/30px Georgia;
+      font-size: 32px;
+      font-weight: 700;
       text-align: center;
+      margin: 20px 0;
+      color: #ffffff;
     }
 
     h2 {
-      font: bold italic 17px/17px Georgia;
-      padding-top: 10px;
+      font-size: 20px;
+      font-weight: 700;
+      margin: 15px 0 10px;
+      color: #ffffff;
     }
 
     small {
-      display: block;
-      font-size: 11px;
-      line-height: 15px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #b0bec5;
     }
 
     canvas {
@@ -53,45 +67,53 @@
       top: 0;
       right: 0;
       bottom: 0;
-      width: 280px;
-      padding-right: 20px;
-      overflow: auto;
+      width: 300px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      overflow-y: auto;
+      box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
     }
 
     #loading {
       position: absolute;
-      left: 0;
+      left: 50%;
       top: 50%;
-      right: 300px;
+      transform: translate(-50%, -50%);
       text-align: center;
-      margin-top: -8px;
+      font-size: 18px;
+      color: #ffffff;
     }
 
     @media (max-width: 600px) {
-      small {
-        font-size: 8px;
-        line-height: 10px;
+      #help {
+        width: 200px;
+        font-size: 12px;
+        padding: 10px;
       }
 
-      #help {
-        width: 100px;
-        font-size: 10px;
-        line-height: 12px;
+      h1 {
+        font-size: 24px;
+      }
+
+      #loading {
+        font-size: 16px;
       }
     }
 
     .dropdown {
       cursor: pointer;
       font-weight: bold;
-      margin-bottom: 5px;
+      margin-bottom: 10px;
+      color: #ffffff;
     }
 
     .dropdown-content {
       display: none;
       padding-left: 20px;
+      margin-bottom: 10px;
     }
 
-    .dropdown.open+.dropdown-content {
+    .dropdown.open + .dropdown-content {
       display: block;
     }
   </style>
@@ -101,7 +123,7 @@
   <div id="loading">Loading...</div>
   <div id="help">
     <h1>WebGL Water</h1>
-    <!-- <div class="dropdown" onclick="toggleDropdown(this)">Interactions:</div> -->
+    <div class="dropdown" onclick="toggleDropdown(this)">Interactions:</div>
     <ul class="dropdown-content">
       <li>Draw on the water to make ripples</li>
       <li>Drag the background to rotate the camera</li>
@@ -110,7 +132,7 @@
       <li>Press the L key to set the light direction</li>
       <li>Press the G key to toggle gravity</li>
     </ul>
-    <!-- <div class="dropdown" onclick="toggleDropdown(this)">Features:</div> -->
+    <div class="dropdown" onclick="toggleDropdown(this)">Features:</div>
     <ul class="dropdown-content">
       <li>Raytraced reflections and refractions</li>
       <li>Analytic ambient occlusion</li>
