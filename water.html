@@ -110,6 +110,7 @@
       <li>Draw on the water surface to make ripples</li>
       <li>Drag the background to rotate the camera</li>
       <li>Press SPACEBAR to pause and unpause</li>
+      <li>Drag the sphere to move it around</li>
       <li>Press the L key to set the light direction</li>
       <li>Press the G key to toggle gravity</li>
     </ul>
@@ -2362,6 +2363,8 @@
   const vec3 underwaterColor = vec3(0.4, 0.9, 1.0);\
   const float poolHeight = 1.0;\
   uniform vec3 light;\
+  uniform vec3 sphereCenter;\
+  uniform float sphereRadius;\
   uniform sampler2D tiles;\
   uniform sampler2D causticTex;\
   uniform sampler2D water;\
@@ -2428,6 +2431,7 @@
     }\
     \
     scale /= length(point); /* pool ambient occlusion */\
+    scale *= 1.0 - 0.9 / pow(length(point - sphereCenter) / sphereRadius, 4.0); /* sphere ambient occlusion */\
     \
     /* caustics */\
     vec3 refractedLight = -refract(-light, vec3(0.0, 1.0, 0.0), IOR_AIR / IOR_WATER);\
@@ -2475,7 +2479,10 @@
       \
       vec3 getSurfaceRayColor(vec3 origin, vec3 ray, vec3 waterColor) {\
         vec3 color;\
-        if (ray.y < 0.0) {\
+        float q = intersectSphere(origin, ray, sphereCenter, sphereRadius);\
+        if (q < 1.0e6) {\
+          color = getSphereColor(origin + ray * q);\
+        } else if (ray.y < 0.0) {\
           vec2 t = intersectCube(origin, ray, vec3(-1.0, -poolHeight, -1.0), vec3(1.0, 2.0, 1.0));\
           color = getWallColor(origin + ray * t.y);\
         } else {\
@@ -2528,6 +2535,23 @@
       }\
     ');
       }
+      this.sphereMesh = GL.Mesh.sphere({ detail: 10 });
+      this.sphereShader = new GL.Shader(helperFunctions + '\
+    varying vec3 position;\
+    void main() {\
+      position = sphereCenter + gl_Vertex.xyz * sphereRadius;\
+      gl_Position = gl_ModelViewProjectionMatrix * vec4(position, 1.0);\
+    }\
+  ', helperFunctions + '\
+    varying vec3 position;\
+    void main() {\
+      gl_FragColor = vec4(getSphereColor(position), 1.0);\
+      vec4 info = texture2D(water, position.xz * 0.5 + 0.5);\
+      if (position.y < info.r) {\
+        gl_FragColor.rgb *= underwaterColor * 1.2;\
+      }\
+    }\
+  ');
       this.cubeMesh = GL.Mesh.cube();
       this.cubeMesh.triangles.splice(4, 2);
       this.cubeMesh.compile();
@@ -2542,6 +2566,72 @@
     varying vec3 position;\
     void main() {\
       gl_FragColor = vec4(getWallColor(position), 1.0);\
+      vec4 info = texture2D(water, position.xz * 0.5 + 0.5);\
+      if (position.y < info.r) {\
+        gl_FragColor.rgb *= underwaterColor * 1.2;\
+      }\
+    }\
+  ');
+      this.sphereCenter = new GL.Vector();
+      this.sphereRadius = 0;
+      var hasDerivatives = !!gl.getExtension('OES_standard_derivatives');
+      this.causticsShader = new GL.Shader(helperFunctions + '\
+    varying vec3 oldPos;\
+    varying vec3 newPos;\
+    varying vec3 ray;\
+    \
+    /* project the ray onto the plane */\
+    vec3 project(vec3 origin, vec3 ray, vec3 refractedLight) {\
+      vec2 tcube = intersectCube(origin, ray, vec3(-1.0, -poolHeight, -1.0), vec3(1.0, 2.0, 1.0));\
+      origin += ray * tcube.y;\
+      float tplane = (-origin.y - 1.0) / refractedLight.y;\
+      return origin + refractedLight * tplane;\
+    }\
+    \
+    void main() {\
+      vec4 info = texture2D(water, gl_Vertex.xy * 0.5 + 0.5);\
+      info.ba *= 0.5;\
+      vec3 normal = vec3(info.b, sqrt(1.0 - dot(info.ba, info.ba)), info.a);\
+      \
+      /* project the vertices along the refracted vertex ray */\
+      vec3 refractedLight = refract(-light, vec3(0.0, 1.0, 0.0), IOR_AIR / IOR_WATER);\
+      ray = refract(-light, normal, IOR_AIR / IOR_WATER);\
+      oldPos = project(gl_Vertex.xzy, refractedLight, refractedLight);\
+      newPos = project(gl_Vertex.xzy + vec3(0.0, info.r, 0.0), ray, refractedLight);\
+      \
+      gl_Position = vec4(0.75 * (newPos.xz + refractedLight.xz / refractedLight.y), 0.0, 1.0);\
+    }\
+  ', (hasDerivatives ? '#extension GL_OES_standard_derivatives : enable\n' : '') + '\
+    ' + helperFunctions + '\
+    varying vec3 oldPos;\
+    varying vec3 newPos;\
+    varying vec3 ray;\
+    \
+    void main() {\
+      ' + (hasDerivatives ? '\
+        /* if the triangle gets smaller, it gets brighter, and vice versa */\
+        float oldArea = length(dFdx(oldPos)) * length(dFdy(oldPos));\
+        float newArea = length(dFdx(newPos)) * length(dFdy(newPos));\
+        gl_FragColor = vec4(oldArea / newArea * 0.2, 1.0, 0.0, 0.0);\
+      ' : '\
+        gl_FragColor = vec4(0.2, 0.2, 0.0, 0.0);\
+      ' ) + '\
+      \
+      vec3 refractedLight = refract(-light, vec3(0.0, 1.0, 0.0), IOR_AIR / IOR_WATER);\
+      \
+      /* compute a blob shadow and make sure we only draw a shadow if the player is blocking the light */\
+      vec3 dir = (sphereCenter - newPos) / sphereRadius;\
+      vec3 area = cross(dir, refractedLight);\
+      float shadow = dot(area, area);\
+      float dist = dot(dir, -refractedLight);\
+      shadow = 1.0 + (shadow - 1.0) / (0.05 + dist * 0.025);\
+      shadow = clamp(1.0 / (1.0 + exp(-shadow)), 0.0, 1.0);\
+      shadow = mix(1.0, shadow, clamp(dist * 2.0, 0.0, 1.0));\
+      gl_FragColor.g = shadow;\
+      \
+      /* shadow for the rim of the pool */\
+      vec2 t = intersectCube(newPos, -refractedLight, vec3(-1.0, -poolHeight, -1.0), vec3(1.0, 2.0, 1.0));\
+      gl_FragColor.r *= 1.0 / (1.0 + exp(-200.0 / (1.0 + 10.0 * (t.y - t.x)) * (newPos.y - refractedLight.y * t.y - 2.0 / 12.0)));\
     }\
   ');
     }
@@ -2554,7 +2644,9 @@
         water.textureA.bind(0);
         this_.causticsShader.uniforms({
           light: this_.lightDir,
-          water: 0
+          water: 0,
+          sphereCenter: this_.sphereCenter,
+          sphereRadius: this_.sphereRadius
         }).draw(this_.waterMesh);
       });
     };
@@ -2574,10 +2666,24 @@
           tiles: 1,
           sky: 2,
           causticTex: 3,
-          eye: tracer.eye
+          eye: tracer.eye,
+          sphereCenter: this.sphereCenter,
+          sphereRadius: this.sphereRadius
         }).draw(this.waterMesh);
       }
       gl.disable(gl.CULL_FACE);
+    };
+
+    Renderer.prototype.renderSphere = function () {
+      water.textureA.bind(0);
+      this.causticTex.bind(1);
+      this.sphereShader.uniforms({
+        light: this.lightDir,
+        water: 0,
+        causticTex: 1,
+        sphereCenter: this.sphereCenter,
+        sphereRadius: this.sphereRadius
+      }).draw(this.sphereMesh);
     };
 
     Renderer.prototype.renderCube = function () {
@@ -2589,7 +2695,9 @@
         light: this.lightDir,
         water: 0,
         tiles: 1,
-        causticTex: 2
+        causticTex: 2,
+        sphereCenter: this.sphereCenter,
+        sphereRadius: this.sphereRadius
       }).draw(this.cubeMesh);
       gl.disable(gl.CULL_FACE);
     };
@@ -2680,6 +2788,35 @@
       gl_FragColor = info;\
     }\
   ');
+      this.sphereShader = new GL.Shader(vertexShader, '\
+    uniform sampler2D texture;\
+    uniform vec3 oldCenter;\
+    uniform vec3 newCenter;\
+    uniform float radius;\
+    varying vec2 coord;\
+    \
+    float volumeInSphere(vec3 center) {\
+      vec3 toCenter = vec3(coord.x * 2.0 - 1.0, 0.0, coord.y * 2.0 - 1.0) - center;\
+      float t = length(toCenter) / radius;\
+      float dy = exp(-pow(t * 1.5, 6.0));\
+      float ymin = min(0.0, center.y - dy);\
+      float ymax = min(max(0.0, center.y + dy), ymin + 2.0 * dy);\
+      return (ymax - ymin) * 0.1;\
+    }\
+    \
+    void main() {\
+      /* get vertex info */\
+      vec4 info = texture2D(texture, coord);\
+      \
+      /* add the old volume */\
+      info.r += volumeInSphere(oldCenter);\
+      \
+      /* subtract the new volume */\
+      info.r -= volumeInSphere(newCenter);\
+      \
+      gl_FragColor = info;\
+    }\
+  ');
     }
 
     Water.prototype.addDrop = function (x, y, radius, strength) {
@@ -2690,6 +2827,19 @@
           center: [x, y],
           radius: radius,
           strength: strength
+        }).draw(this_.plane);
+      });
+      this.textureB.swapWith(this.textureA);
+    };
+
+    Water.prototype.moveSphere = function (oldCenter, newCenter, radius) {
+      var this_ = this;
+      this.textureB.drawTo(function () {
+        this_.textureA.bind();
+        this_.sphereShader.uniforms({
+          oldCenter: oldCenter,
+          newCenter: newCenter,
+          radius: radius
         }).draw(this_.plane);
       });
       this.textureB.swapWith(this.textureA);
@@ -2742,6 +2892,13 @@
     var angleX = -25;
     var angleY = -200.5;
 
+    // Sphere physics info
+    var useSpherePhysics = false;
+    var center;
+    var oldCenter;
+    var velocity;
+    var gravity;
+    var radius;
     var paused = false;
 
     window.onload = function () {
@@ -2781,6 +2938,11 @@
         throw new Error('Rendering to floating-point textures is required but not supported');
       }
 
+      center = oldCenter = new GL.Vector(-0.4, -0.75, 0.2);
+      velocity = new GL.Vector();
+      gravity = new GL.Vector(0, -4, 0);
+      radius = 0.25;
+
       for (var i = 0; i < 20; i++) {
         water.addDrop(Math.random() * 2 - 1, Math.random() * 2 - 1, 0.03, (i & 1) ? 0.01 : -0.01);
       }
@@ -2811,6 +2973,7 @@
       var planeNormal;
       var mode = -1;
       var MODE_ADD_DROPS = 0;
+      var MODE_MOVE_SPHERE = 1;
       var MODE_ORBIT_CAMERA = 2;
 
       var oldX, oldY;
@@ -2821,7 +2984,12 @@
         var tracer = new GL.Raytracer();
         var ray = tracer.getRayForPixel(x * ratio, y * ratio);
         var pointOnPlane = tracer.eye.add(ray.multiply(-tracer.eye.y / ray.y));
-        if (Math.abs(pointOnPlane.x) < 1 && Math.abs(pointOnPlane.z) < 1) {
+        var sphereHitTest = GL.Raytracer.hitTestSphere(tracer.eye, ray, center, radius);
+        if (sphereHitTest) {
+          mode = MODE_MOVE_SPHERE;
+          prevHit = sphereHitTest.hit;
+          planeNormal = tracer.getRayForPixel(gl.canvas.width / 2, gl.canvas.height / 2).negative();
+        } else if (Math.abs(pointOnPlane.x) < 1 && Math.abs(pointOnPlane.z) < 1) {
           mode = MODE_ADD_DROPS;
           duringDrag(x, y);
         } else {
@@ -2840,6 +3008,19 @@
               water.updateNormals();
               renderer.updateCaustics(water);
             }
+            break;
+          }
+          case MODE_MOVE_SPHERE: {
+            var tracer = new GL.Raytracer();
+            var ray = tracer.getRayForPixel(x * ratio, y * ratio);
+            var t = -planeNormal.dot(tracer.eye.subtract(prevHit)) / planeNormal.dot(ray);
+            var nextHit = tracer.eye.add(ray.multiply(t));
+            center = center.add(nextHit.subtract(prevHit));
+            center.x = Math.max(radius - 1, Math.min(1 - radius, center.x));
+            center.y = Math.max(radius - 1, Math.min(10, center.y));
+            center.z = Math.max(radius - 1, Math.min(1 - radius, center.z));
+            prevHit = nextHit;
+            if (paused) renderer.updateCaustics(water);
             break;
           }
           case MODE_ORBIT_CAMERA: {
@@ -2907,6 +3088,28 @@
 
       function update(seconds) {
         if (seconds > 1) return;
+        frame += seconds * 2;
+
+        if (mode == MODE_MOVE_SPHERE) {
+          // Start from rest when the player releases the mouse after moving the sphere
+          velocity = new GL.Vector();
+        } else if (useSpherePhysics) {
+          // Fall down with viscosity under water
+          var percentUnderWater = Math.max(0, Math.min(1, (radius - center.y) / (2 * radius)));
+          velocity = velocity.add(gravity.multiply(seconds - 1.1 * seconds * percentUnderWater));
+          velocity = velocity.subtract(velocity.unit().multiply(percentUnderWater * seconds * velocity.dot(velocity)));
+          center = center.add(velocity.multiply(seconds));
+
+          // Bounce off the bottom
+          if (center.y < radius - 1) {
+            center.y = radius - 1;
+            velocity.y = Math.abs(velocity.y) * 0.7;
+          }
+        }
+
+        // Displace water around the sphere
+        water.moveSphere(oldCenter, center, radius);
+        oldCenter = center;
 
         // Update the water simulation and graphics
         water.stepSimulation();
@@ -2930,8 +3133,11 @@
         gl.translate(0, 0.5, 0);
 
         gl.enable(gl.DEPTH_TEST);
+        renderer.sphereCenter = center;
+        renderer.sphereRadius = radius;
         renderer.renderCube();
         renderer.renderWater(water, cubemap);
+        renderer.renderSphere();
         gl.disable(gl.DEPTH_TEST);
       }
     };
