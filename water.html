@@ -2901,6 +2901,8 @@
     var radius;
     var paused = false;
 
+    let cubemapRotation = [0, 0]; // [angleX, angleY]
+
     window.onload = function () {
       var ratio = window.devicePixelRatio || 1;
       var help = document.getElementById('help');
@@ -3079,7 +3081,11 @@
       };
 
       document.onkeydown = function (e) {
-        if (e.which == ' '.charCodeAt(0)) paused = !paused;
+        if (e.which === 37) cubemapRotation[1] -= 5; // Left arrow key
+        else if (e.which === 39) cubemapRotation[1] += 5; // Right arrow key
+        else if (e.which === 38) cubemapRotation[0] -= 5; // Up arrow key
+        else if (e.which === 40) cubemapRotation[0] += 5; // Down arrow key
+        else if (e.which == ' '.charCodeAt(0)) paused = !paused;
         else if (e.which == 'G'.charCodeAt(0)) useSpherePhysics = !useSpherePhysics;
         else if (e.which == 'L'.charCodeAt(0) && paused) draw();
       };
@@ -3119,13 +3125,16 @@
       }
 
       function draw() {
+        // Render the cubemap as the background
+        renderBackground(cubemap);
+
         // Change the light direction to the camera look vector when the L key is pressed
         if (GL.keys.L) {
           renderer.lightDir = GL.Vector.fromAngles((90 - angleY) * Math.PI / 180, -angleX * Math.PI / 180);
           if (paused) renderer.updateCaustics(water);
         }
 
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.clear(gl.DEPTH_BUFFER_BIT); // Clear depth buffer before rendering other elements
         gl.loadIdentity();
         gl.translate(0, 0, -4);
         gl.rotate(-angleX, 1, 0, 0);
@@ -3141,6 +3150,36 @@
         gl.disable(gl.DEPTH_TEST);
       }
     };
+
+    function renderBackground(sky) {
+      gl.disable(gl.DEPTH_TEST); // Disable depth testing for the background
+      sky.bind(0); // Bind the cubemap texture
+
+      const backgroundShader = new GL.Shader(
+        `
+          varying vec3 direction;
+          uniform mat4 rotationMatrix;
+          void main() {
+            direction = (rotationMatrix * vec4(gl_Vertex.xyz, 0.0)).xyz;
+            gl_Position = vec4(gl_Vertex.xy, 1.0, 1.0);
+          }
+        `,
+        `
+          uniform samplerCube sky;
+          varying vec3 direction;
+          void main() {
+            gl_FragColor = textureCube(sky, normalize(direction));
+          }
+        `
+      );
+
+      const backgroundMesh = GL.Mesh.cube();
+      const rotationMatrix = GL.Matrix.rotate(cubemapRotation[0], 1, 0, 0)
+        .multiply(GL.Matrix.rotate(cubemapRotation[1], 0, 1, 0));
+      backgroundShader.uniforms({ sky: 0, rotationMatrix }).draw(backgroundMesh, gl.TRIANGLES);
+
+      gl.enable(gl.DEPTH_TEST); // Re-enable depth testing for other elements
+    }
 
     function initTextures() {
       // Initialize textures for existing images
