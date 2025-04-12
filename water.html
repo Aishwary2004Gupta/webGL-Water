@@ -88,7 +88,7 @@
 
     @media (max-width: 600px) {
       #help {
-        width: 200px;
+        width: 250px;
         font-size: 12px;
         padding: 10px;
       }
@@ -108,6 +108,7 @@
   <div id="loading">Loading...</div>
   <div id="help">
     <h1>WebGL Water</h1>
+    <h2>Interactions:</h2>
     <ul>
       <li>Draw on the water surface to make ripples</li>
       <li>Drag the background to rotate the camera</li>
@@ -115,9 +116,13 @@
       <li>Drag the sphere to move it around</li>
       <li>Press the L key to set the light direction</li>
       <li>Press the G key to toggle gravity</li>
-      <li>Use arrow keys to rotate the cubemap</li>
+      <li>Use arrow keys to rotate the cubemap(Background)</li>
       <li>Use the mouse or touch gestures to interact with the simulation</li>
     </ul>
+
+    <p>Explore the simulation by interacting with the water, sphere, and environment using the controls above.</p>
+
+
     <h2>Features:</h2>
     <ul>
       <li>Reflection</li>
@@ -129,7 +134,6 @@
       <li>Object Interaction</li>
       <li>God Rays</li>
     </ul>
-    <p>Explore the simulation by interacting with the water, sphere, and environment using the controls above.</p>
   </div>
   <img id="tiles" src="tile4.jpg">
   <img id="xneg" src="xneg.jpg">
@@ -149,6 +153,8 @@
         if (!gl.getExtension('OES_texture_float')) {
           return false;
         }
+
+        yneg.rotateZ(-Math.PI / 2);
 
         // Create a render target
         var framebuffer = gl.createFramebuffer();
