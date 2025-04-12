@@ -11,7 +11,8 @@
       font-family: 'Roboto', Arial, sans-serif;
       font-size: 14px;
       line-height: 1.6;
-      background: #121212;
+      background: url('background.jpg') no-repeat center center fixed;
+      background-size: cover;
       color: #e0e0e0;
       margin: 0;
       overflow: hidden;
@@ -60,6 +61,7 @@
       position: absolute;
       top: 0;
       left: 0;
+      z-index: 1; /* Ensure the water canvas is above the background */
     }
 
     #help {
@@ -76,7 +78,7 @@
 
     #loading {
       position: absolute;
-      left: 31%;  
+      left: 31%;
       top: 50%;
       transform: translate(-50%, -50%);
       text-align: center;
