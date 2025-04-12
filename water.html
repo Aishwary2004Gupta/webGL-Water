@@ -115,6 +115,7 @@
       <li>Drag the sphere to move it around</li>
       <li>Press the L key to set the light direction</li>
       <li>Press the G key to toggle gravity</li>
+      <li>Use arrow keys to rotate the cubemap</li>
     </ul>
     <ul>
       <li>Raytraced reflections and refractions</li>
@@ -123,6 +124,7 @@
       <li>Soft shadows</li>
       <li>Caustics (see <a href="https://medium.com/@evanwallace/rendering-realtime-caustics-in-webgl-2a99a29a0b2c">this</a> for details) **</li>
     </ul>
+    <p>Use the mouse or touch gestures to interact with the simulation.</p>
   </div>
   <img id="tiles" src="tile4.jpg">
   <img id="xneg" src="xneg.jpg">
@@ -3184,7 +3186,7 @@
     function initTextures() {
       // Initialize textures for existing images
       pool.Texture = gl.createTexture();
-      initTexture(pool.Texture, "tile/tile3.jpg"); // White brick texture
+      initTexture(pool.Texture, "tile/tile4.jpg"); // White brick texture
 
       sky.Texture = gl.createTexture();
       initSkyBoxTexture(); // Skybox textures
@@ -3218,7 +3220,6 @@
       initCustomeTexture(water.TextureC, gl.RGBA, filter, gl.FLOAT, textureSize2, textureSize2);
       initCustomeTexture(depthTexture, gl.DEPTH_COMPONENT, gl.NEAREST, gl.UNSIGNED_SHORT, gl.viewportWidth, gl.viewportHeight);
       initCustomeTexture(colorTexture, gl.RGBA, gl.NEAREST, gl.UNSIGNED_BYTE, gl.viewportWidth, gl.viewportHeight);
-      // ...existing code...
     }
 
     // Ensure the background image is loaded before rendering
