@@ -2901,6 +2901,41 @@
     var radius;
     var paused = false;
 
+    function initSkyBoxTexture() {
+      var ct = 0;
+      var img = new Array(6);
+      var urls = [
+        "xpos.jpg", "xneg.jpg",
+        "ypos.jpg", "yneg.jpg",
+        "ypos.jpg", "zneg.jpg"
+      ];
+      for (var i = 0; i < 6; i++) {
+        img[i] = new Image();
+        img[i].onload = function () {
+          ct++;
+          if (ct == 6) { // upon finish loading all 6 images
+            sky.Texture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_CUBE_MAP, sky.Texture);
+            var targets = [
+              gl.TEXTURE_CUBE_MAP_POSITIVE_X, gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
+              gl.TEXTURE_CUBE_MAP_POSITIVE_Y, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
+              gl.TEXTURE_CUBE_MAP_POSITIVE_Z, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z
+            ];
+            for (var j = 0; j < 6; j++) {
+              gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+              gl.texImage2D(targets[j], 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img[j]);
+              gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+              gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+              gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+              gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            }
+            gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
+          }
+        };
+        img[i].src = urls[i];
+      }
+    }
+
     window.onload = function () {
       var ratio = window.devicePixelRatio || 1;
       var help = document.getElementById('help');
@@ -3140,6 +3175,8 @@
         renderer.renderSphere();
         gl.disable(gl.DEPTH_TEST);
       }
+
+      initSkyBoxTexture(); // Initialize the skybox texture
     };
   </script>
 </body>
