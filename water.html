@@ -11,8 +11,6 @@
       font-family: 'Roboto', Arial, sans-serif;
       font-size: 14px;
       line-height: 1.6;
-      background: url('background.jpg') no-repeat center center fixed;
-      background-size: cover;
       color: #e0e0e0;
       margin: 0;
       overflow: hidden;
@@ -61,7 +59,9 @@
       position: absolute;
       top: 0;
       left: 0;
-      z-index: 1; /* Ensure the water canvas is above the background */
+      z-index: 0; /* Ensure the canvas is at the base layer */
+      background: url('background.jpg') no-repeat center center fixed;
+      background-size: cover;
     }
 
     #help {
