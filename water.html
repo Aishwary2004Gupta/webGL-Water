@@ -2854,7 +2854,7 @@
         this_.sphereShader.uniforms({
           oldCenter: oldCenter,
           newCenter: newCenter,
-          radius: radius * 0.5 // Reduce the sphere's effective radius for wave displacement
+          radius: radius * 0.4 // Reduce the sphere's effective radius for wave displacement
         }).draw(this_.plane);
       });
       this.textureB.swapWith(this.textureA);
