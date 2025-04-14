@@ -3098,8 +3098,8 @@
       document.onkeydown = function (e) {
         if (e.which === 37) cubemapRotation[1] -= 5; // Left arrow key
         else if (e.which === 39) cubemapRotation[1] += 5; // Right arrow key
-        else if (e.which === 38) cubemapRotation[0] -= 5; // Up arrow key
-        else if (e.which === 40) cubemapRotation[0] += 5; // Down arrow key
+        // else if (e.which === 38) cubemapRotation[0] -= 5; // Up arrow key
+        // else if (e.which === 40) cubemapRotation[0] += 5; // Down arrow key
         else if (e.which == ' '.charCodeAt(0)) paused = !paused;
         else if (e.which == 'G'.charCodeAt(0)) useSpherePhysics = !useSpherePhysics;
         else if (e.which == 'L'.charCodeAt(0) && paused) draw();
