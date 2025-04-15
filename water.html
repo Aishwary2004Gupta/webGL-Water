@@ -145,8 +145,6 @@
   <img id="zneg" src="zneg.jpg">
   <img id="zpos" src="zpos.jpg">
 
-  <script src="https://cdn.jsdelivr.net/npm/webgl-obj-loader@2.0.3/dist/webgl-obj-loader.min.js"></script>
-
   <script>
     (function () {
       // Uploads a 2x2 floating-point texture where one pixel is 2 and the other
@@ -2921,70 +2919,6 @@
 
     let cubemapRotation = [0, 0]; // [angleX, angleY]
 
-    let duckMesh;
-    let duckCenter = new GL.Vector(-0.4, -0.75, 0.2); // Initial position of the duck
-    let duckOldCenter = duckCenter.clone();
-    let duckVelocity = new GL.Vector();
-    const duckGravity = new GL.Vector(0, -4, 0);
-    const duckRadius = 0.25; // Approximate radius for duck's interaction with water
-    let useDuckPhysics = false;
-
-    function loadDuckModel() {
-      const request = new XMLHttpRequest();
-      request.open('GET', './duck.obj', true); // Ensure the correct relative path
-      request.onload = function () {
-        if (request.status >= 200 && request.status < 400) {
-          const objData = request.responseText;
-          const objMesh = new OBJ.Mesh(objData);
-          duckMesh = GL.Mesh.load({
-            vertices: objMesh.vertices,
-            normals: objMesh.vertexNormals,
-            triangles: objMesh.indices
-          });
-        } else {
-          console.error('Failed to load duck.obj');
-        }
-      };
-      request.send();
-    }
-
-    // Update the duck's position and interaction with water
-    function updateDuck(seconds) {
-      if (seconds > 1) return;
-
-      if (useDuckPhysics) {
-        // Apply physics to the duck
-        const percentUnderWater = Math.max(0, Math.min(1, (duckRadius - duckCenter.y) / (2 * duckRadius)));
-        duckVelocity = duckVelocity.add(duckGravity.multiply(seconds - 1.1 * seconds * percentUnderWater));
-        duckVelocity = duckVelocity.subtract(duckVelocity.unit().multiply(percentUnderWater * seconds * duckVelocity.dot(duckVelocity)));
-        duckCenter = duckCenter.add(duckVelocity.multiply(seconds));
-
-        // Bounce off the bottom
-        if (duckCenter.y < duckRadius - 1) {
-          duckCenter.y = duckRadius - 1;
-          duckVelocity.y = Math.abs(duckVelocity.y) * 0.7;
-        }
-      }
-
-      // Displace water around the duck
-      water.moveSphere(duckOldCenter, duckCenter, duckRadius);
-      duckOldCenter = duckCenter;
-    }
-
-    // Render the duck
-    function renderDuck() {
-      if (!duckMesh) return;
-
-      water.textureA.bind(0);
-      renderer.sphereShader.uniforms({
-        light: renderer.lightDir,
-        water: 0,
-        causticTex: 1,
-        sphereCenter: duckCenter,
-        sphereRadius: duckRadius
-      }).draw(duckMesh);
-    }
-
     window.onload = function () {
       var ratio = window.devicePixelRatio || 1;
       var help = document.getElementById('help');
@@ -3170,7 +3104,6 @@
         else if (e.which == ' '.charCodeAt(0)) paused = !paused;
         else if (e.which == 'G'.charCodeAt(0)) useSpherePhysics = !useSpherePhysics;
         else if (e.which == 'L'.charCodeAt(0) && paused) draw();
-        else if (e.which == 'D'.charCodeAt(0)) useDuckPhysics = !useDuckPhysics; // Toggle duck physics
       };
 
       var frame = 0;
@@ -3199,8 +3132,6 @@
         // Displace water around the sphere
         water.moveSphere(oldCenter, center, radius);
         oldCenter = center;
-
-        updateDuck(seconds); // Update the duck's position
 
         // Update the water simulation and graphics
         water.stepSimulation();
@@ -3232,11 +3163,8 @@
         renderer.renderCube();
         renderer.renderWater(water, cubemap);
         renderer.renderSphere();
-        renderDuck(); // Render the duck
         gl.disable(gl.DEPTH_TEST);
       }
-
-      loadDuckModel(); // Load the duck model
     };
 
     function renderBackground(sky) {
