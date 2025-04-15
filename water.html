@@ -103,8 +103,6 @@
       }
     }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/examples/js/loaders/OBJLoader.js"></script>
 </head>
 
 <body>
@@ -3244,85 +3242,6 @@
     backgroundImage.onload = function () {
       console.log('Background image loaded successfully.');
     };
-
-    let duckModel;
-    const objLoader = new THREE.OBJLoader();
-
-    objLoader.load('path/to/duck.obj', function (object) {
-      duckModel = object;
-      duckModel.traverse(function (child) {
-        if (child.isMesh) {
-          child.material = new THREE.MeshPhongMaterial({ color: 0xffd700 }); // Apply shading
-        }
-      });
-    });
-
-    function renderDuck() {
-      if (!duckModel) return;
-
-      duckModel.position.set(center.x, center.y, center.z);
-      duckModel.scale.set(radius, radius, radius); // Scale to match the sphere size
-      duckModel.rotation.y += 0.01; // Optional: Add rotation for animation
-
-      const tracer = new GL.Raytracer();
-      const lightDir = renderer.lightDir;
-
-      // Apply shadow, reflection, and refraction logic
-      duckModel.traverse(function (child) {
-        if (child.isMesh) {
-          child.material.onBeforeCompile = function (shader) {
-            shader.uniforms.lightDir = { value: lightDir };
-            shader.vertexShader = `
-              varying vec3 vNormal;
-              varying vec3 vPosition;
-              ${shader.vertexShader}
-            `.replace(
-              `#include <begin_vertex>`,
-              `
-              #include <begin_vertex>
-              vNormal = normalMatrix * normal;
-              vPosition = (modelMatrix * vec4(position, 1.0)).xyz;
-              `
-            );
-            shader.fragmentShader = `
-              uniform vec3 lightDir;
-              varying vec3 vNormal;
-              varying vec3 vPosition;
-              ${shader.fragmentShader}
-            `.replace(
-              `#include <dithering_fragment>`,
-              `
-              vec3 normal = normalize(vNormal);
-              float shadow = max(0.0, dot(normal, lightDir));
-              gl_FragColor.rgb *= shadow; // Apply shadow
-              #include <dithering_fragment>
-              `
-            );
-          };
-        }
-      });
-
-      duckModel.updateMatrixWorld();
-      renderer.renderCube(); // Render the pool
-      renderer.renderWater(water, cubemap); // Render water
-      renderer.renderSphere(); // Render duck in place of the sphere
-    }
-
-    function draw() {
-      renderBackground(cubemap); // Render the cubemap as the background
-      gl.clear(gl.DEPTH_BUFFER_BIT);
-      gl.loadIdentity();
-      gl.translate(0, 0, -4);
-      gl.rotate(-angleX, 1, 0, 0);
-      gl.rotate(-angleY, 0, 1, 0);
-      gl.translate(0, 0.5, 0);
-
-      gl.enable(gl.DEPTH_TEST);
-      renderer.sphereCenter = center;
-      renderer.sphereRadius = radius;
-      renderDuck(); // Render the duck model
-      gl.disable(gl.DEPTH_TEST);
-    }
   </script>
 </body>
 
