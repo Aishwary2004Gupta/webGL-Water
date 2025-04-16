@@ -2628,7 +2628,9 @@
         `
           varying vec3 position;
           void main() {
-            gl_FragColor = vec4(position, 1.0); // Example color
+            // Apply a gradient color based on the position
+            vec3 color = vec3(0.5 + 0.5 * position.x, 0.5 + 0.5 * position.y, 0.5 + 0.5 * position.z);
+            gl_FragColor = vec4(color, 1.0);
           }
         `
       );
