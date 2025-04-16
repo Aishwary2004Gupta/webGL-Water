@@ -2552,6 +2552,26 @@
     ');
       }
       this.sphereMesh = GL.Mesh.sphere({ detail: 10 });
+      this.torusMesh = GL.Mesh.load({
+        vertices: [], // Define torus vertices
+        triangles: [] // Define torus triangles
+      });
+      // Add torus shader
+      this.torusShader = new GL.Shader(
+        `
+          varying vec3 position;
+          void main() {
+            position = gl_Vertex.xyz;
+            gl_Position = gl_ModelViewProjectionMatrix * vec4(position, 1.0);
+          }
+        `,
+        `
+          varying vec3 position;
+          void main() {
+            gl_FragColor = vec4(position, 1.0); // Example color
+          }
+        `
+      );
       this.sphereShader = new GL.Shader(helperFunctions + '\
     varying vec3 position;\
     void main() {\
