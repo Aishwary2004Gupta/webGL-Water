@@ -2613,10 +2613,7 @@
       }
       this.sphereMesh = GL.Mesh.torus({ detail: 10 });
       // this.torusMesh - GL.Mesh.torus({ detail: 10 });
-      this.torusMesh = GL.Mesh.load({
-        vertices: [], // Define torus vertices
-        triangles: [] // Define torus triangles
-      });
+      this.torusMesh = GL.Mesh.torus({ detailX: 10, detailY: 30, radius: 0.7, tube: 0.3 }); // Properly define torusMesh
       // Add torus shader
       this.torusShader = new GL.Shader(
         `
@@ -2774,13 +2771,17 @@
     Renderer.prototype.renderSphere = function () {
       water.textureA.bind(0);
       this.causticTex.bind(1);
-      this.sphereShader.uniforms({
+      // this.sphereShader.uniforms({
+      this.torusShader.uniforms({
         light: this.lightDir,
         water: 0,
         causticTex: 1,
-        sphereCenter: this.sphereCenter,
-        sphereRadius: this.sphereRadius
-      }).draw(this.sphereMesh); // Use torusMesh instead of sphereMesh
+      //   sphereCenter: this.sphereCenter,
+      //   sphereRadius: this.sphereRadius
+      // }).draw(this.sphereMesh); 
+        sphereCenter: this.sphereCenter, // Update if needed for torus-specific logic
+        sphereRadius: this.sphereRadius  // Update if needed for torus-specific logic
+      }).draw(this.torusMesh); // Use torusMesh
     };
 
     Renderer.prototype.renderCube = function () {
