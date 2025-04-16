@@ -2718,18 +2718,6 @@
       gl.disable(gl.CULL_FACE);
     };
 
-    Renderer.prototype.renderCuboid = function () {
-      water.textureA.bind(0);
-      this.cubeShader.uniforms({
-        light: this.lightDir,
-        water: 0,
-        tiles: 1,
-        causticTex: 2,
-        cuboidCenter: this.sphereCenter,
-        cuboidDimensions: [cuboidWidth, cuboidHeight, cuboidDepth]
-      }).draw(this.cubeMesh);
-    };
-
     // The data in the texture is (position.y, velocity.y, normal.x, normal.z)
     function Water() {
       var vertexShader = '\
@@ -2968,21 +2956,14 @@
         throw new Error('Rendering to floating-point textures is required but not supported');
       }
 
-      center = oldCenter = new GL.Vector(0, -0.74, -0.2); // Set cuboid to the middle
+      center = oldCenter = new GL.Vector(0, -0.74, -0.2); // Set sphere to the middle
       velocity = new GL.Vector();
       gravity = new GL.Vector(0, -4, 0);
-      radius = 0.25; // Use this as half the height of the cuboid
-
-      // Define cuboid dimensions
-      var cuboidWidth = 0.5;
-      var cuboidHeight = 0.1; // Flat cuboid
-      var cuboidDepth = 0.3;
+      radius = 0.25;
 
       for (var i = 0; i < 20; i++) {
         water.addDrop(Math.random() * 2 - 1, Math.random() * 2 - 1, 0.03, (i & 1) ? 0.01 : -0.01);
       }
-
-      renderer.cuboidDimensions = { width: cuboidWidth, height: cuboidHeight, depth: cuboidDepth };
 
       document.getElementById('loading').innerHTML = '';
       onresize();
