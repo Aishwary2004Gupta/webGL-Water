@@ -1557,6 +1557,63 @@
         return mesh;
       };
 
+      // ### GL.Mesh.torus([options])
+      //
+      // Generates a torus mesh. The `options` argument specifies options to pass to the mesh constructor.
+      // Additional options include `detailX` and `detailY`, which set the tesselation in x and y,
+      // `radius`, which sets the radius of the torus, and `tube`, which sets the radius of the tube.
+      // Example usage:
+      //
+      //     var mesh1 = GL.Mesh.torus();
+      //     var mesh2 = GL.Mesh.torus({ detailX: 40, detailY: 30, radius: 0.7, tube: 0.3 });
+      //
+      Mesh.torus = function (options) {
+        options = options || {};
+        var mesh = new GL.Mesh(options);
+        var detailX = options.detailX || options.detail || 30;
+        var detailY = options.detailY || options.detail || 20;
+        var radius = options.radius || 1;
+        var tube = options.tube || 0.5;
+
+        for (var y = 0; y <= detailY; y++) {
+          var v = y / detailY * Math.PI * 2;
+          var cosV = Math.cos(v), sinV = Math.sin(v);
+
+          for (var x = 0; x <= detailX; x++) {
+            var u = x / detailX * Math.PI * 2;
+            var cosU = Math.cos(u), sinU = Math.sin(u);
+
+            var tx = (radius + tube * cosV) * cosU;
+            var ty = tube * sinV;
+            var tz = (radius + tube * cosV) * sinU;
+
+            mesh.vertices.push([tx, ty, tz]);
+            if (mesh.normals) {
+              var nx = cosV * cosU;
+              var ny = sinV;
+              var nz = cosV * sinU;
+              mesh.normals.push([nx, ny, nz]);
+            }
+            if (mesh.coords) {
+              mesh.coords.push([x / detailX, y / detailY]);
+            }
+          }
+        }
+
+        for (var y = 0; y < detailY; y++) {
+          for (var x = 0; x < detailX; x++) {
+            var i = x + y * (detailX + 1);
+            var next = i + detailX + 1;
+
+            mesh.triangles.push([i, next, i + 1]);
+            mesh.triangles.push([next, next + 1, i + 1]);
+          }
+        }
+
+        mesh.compile();
+        return mesh;
+      };
+
       // src/raytracer.js
       // Provides a convenient raytracing interface.
 
@@ -2551,7 +2608,7 @@
       }\
     ');
       }
-      this.sphereMesh = GL.Mesh.sphere({ detail: 10 });
+      this.sphereMesh = GL.Mesh.torus({ detail: 10 });
       this.torusMesh = GL.Mesh.load({
         vertices: [], // Define torus vertices
         triangles: [] // Define torus triangles
