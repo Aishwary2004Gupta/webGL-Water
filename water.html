@@ -2611,8 +2611,8 @@
       }\
     ');
       }
-      this.sphereMesh = GL.Mesh.torus({ detail: 10 });
-      // this.torusMesh - GL.Mesh.torus({ detail: 10 });
+      // this.sphereMesh = GL.Mesh.sphere({ detail: 10 });
+      this.torusMesh - GL.Mesh.torus({ detail: 10 });
       this.torusMesh = GL.Mesh.load({
         vertices: [], // Define torus vertices
         triangles: [] // Define torus triangles
@@ -2749,13 +2749,15 @@
     };
 
     Renderer.prototype.renderWater = function (water, sky) {
-      var tracer = new GL.Raytracer();
+      this.renderReflection(water, sky); // Render reflections first
+      const tracer = new GL.Raytracer();
       water.textureA.bind(0);
       this.tileTexture.bind(1);
       sky.bind(2);
       this.causticTex.bind(3);
+
       gl.enable(gl.CULL_FACE);
-      for (var i = 0; i < 2; i++) {
+      for (let i = 0; i < 2; i++) {
         gl.cullFace(i ? gl.BACK : gl.FRONT);
         this.waterShaders[i].uniforms({
           light: this.lightDir,
@@ -2765,7 +2767,7 @@
           causticTex: 3,
           eye: tracer.eye,
           sphereCenter: this.sphereCenter,
-          sphereRadius: this.sphereRadius
+          sphereRadius: this.sphereRadius,
         }).draw(this.waterMesh);
       }
       gl.disable(gl.CULL_FACE);
@@ -2800,6 +2802,47 @@
         sphereCenter: this.sphereCenter,
         sphereRadius: this.sphereRadius
       }).draw(this.cubeMesh);
+      gl.disable(gl.CULL_FACE);
+    };
+
+    Renderer.prototype.renderReflection = function (water, sky) {
+      const tracer = new GL.Raytracer();
+      water.textureA.bind(0);
+      this.tileTexture.bind(1);
+      sky.bind(2);
+      this.causticTex.bind(3);
+
+      // Render reflection for all meshes
+      gl.enable(gl.CULL_FACE);
+      gl.cullFace(gl.BACK);
+      this.waterShaders[0].uniforms({
+        light: this.lightDir,
+        water: 0,
+        tiles: 1,
+        sky: 2,
+        causticTex: 3,
+        eye: tracer.eye,
+        sphereCenter: this.sphereCenter,
+        sphereRadius: this.sphereRadius,
+      }).draw(this.waterMesh);
+
+      // Render torus reflection
+      this.torusShader.uniforms({
+        light: this.lightDir,
+        water: 0,
+        causticTex: 3,
+      }).draw(this.torusMesh);
+
+      // Render cube reflection
+      this.cubeShader.uniforms({
+        light: this.lightDir,
+        water: 0,
+        tiles: 1,
+        causticTex: 3,
+        sphereCenter: this.sphereCenter,
+        sphereRadius: this.sphereRadius,
+      }).draw(this.cubeMesh);
+
       gl.disable(gl.CULL_FACE);
     };
 
