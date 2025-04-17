@@ -2611,8 +2611,8 @@
       }\
     ');
       }
-      // this.sphereMesh = GL.Mesh.sphere({ detail: 10 });
-      this.torusMesh - GL.Mesh.torus({ detail: 10 });
+      this.sphereMesh = GL.Mesh.sphere({ detail: 10 });
+      // this.torusMesh - GL.Mesh.torus({ detail: 10 });
       this.torusMesh = GL.Mesh.load({
         vertices: [], // Define torus vertices
         triangles: [] // Define torus triangles
@@ -2749,13 +2749,13 @@
     };
 
     Renderer.prototype.renderWater = function (water, sky) {
+      // var tracer = new GL.Raytracer();
       this.renderReflection(water, sky); // Render reflections first
       const tracer = new GL.Raytracer();
       water.textureA.bind(0);
       this.tileTexture.bind(1);
       sky.bind(2);
       this.causticTex.bind(3);
-
       gl.enable(gl.CULL_FACE);
       for (let i = 0; i < 2; i++) {
         gl.cullFace(i ? gl.BACK : gl.FRONT);
