@@ -2611,7 +2611,7 @@
       }\
     ');
       }
-      this.torusMesh = GL.Mesh.torus({ detail: 10 });
+      this.sphereMesh = GL.Mesh.torus({ detail: 10 });
       // this.torusMesh - GL.Mesh.torus({ detail: 10 });
       this.torusMesh = GL.Mesh.load({
         vertices: [], // Define torus vertices
@@ -2786,7 +2786,7 @@
       // }).draw(this.sphereMesh); 
         sphereCenter: this.sphereCenter,
         sphereRadius: this.sphereRadius
-      }).draw(this.torusMesh); // Use torusMesh instead of sphereMesh
+      }).draw(this.sphereMesh); // Use torusMesh instead of sphereMesh
     };
 
     Renderer.prototype.renderCube = function () {
