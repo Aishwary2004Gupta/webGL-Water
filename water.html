@@ -2557,7 +2557,7 @@
         vec3 color;\
         float q = intersectSphere(origin, ray, sphereCenter, sphereRadius);\
         if (q < 1.0e6) {\
-          color = getSphereColor(origin + ray * q);\
+          color = vec3(1.0, 0.0, 1.0); /* Match reflection color to sphere color (pink) */\
         } else if (ray.y < 0.0) {\
           vec2 t = intersectCube(origin, ray, vec3(-1.0, -poolHeight, -1.0), vec3(1.0, 2.0, 1.0));\
           color = getWallColor(origin + ray * t.y);\
@@ -2611,7 +2611,7 @@
       }\
     ');
       }
-      this.sphereMesh = GL.Mesh.torus({ detail: 10 });
+      this.sphereMesh = GL.Mesh.sphere({ detail: 10 });
       // this.torusMesh - GL.Mesh.torus({ detail: 10 });
       this.torusMesh = GL.Mesh.load({
         vertices: [], // Define torus vertices
