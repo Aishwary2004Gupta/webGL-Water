@@ -2646,9 +2646,7 @@
       float angle = atan(normal.z, normal.x) + 3.14159265359; /* Map angle to [0, 2π] */\
       float segment = floor(angle / (3.14159265359 / 3.0)); /* Divide into 6 segments */\
       vec3 color = mod(segment, 2.0) == 0.0 ? vec3(1.0, 0.0, 0.0) : vec3(1.0, 1.0, 0.0); /* Alternate red and yellow */\
-      if (normal.y > 0.8) color = vec3(0.0, 0.5, 1.0); /* Blue cap on top */\
-      else if (normal.y < -0.8) color = vec3(0.0, 1.0, 0.0); /* Green cap on bottom */\
-      gl_FragColor = vec4(color, 1.0);\
+      gl_FragColor = vec4(color, 1.0); /* Remove blue and green caps */\
     }\
   ');
       this.cubeMesh = GL.Mesh.cube();
