@@ -2642,7 +2642,6 @@
   ', helperFunctions + '\
     varying vec3 position;\
     void main() {\
-    /**/
       vec3 normal = normalize(position - sphereCenter);\
       float angle = atan(normal.z, normal.x) + 3.14159265359; /* Map angle to [0, 2π] */\
       float segment = floor(angle / (3.14159265359 / 3.0)); /* Divide into 6 segments */\
